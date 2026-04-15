@@ -1,0 +1,2581 @@
+<!-- Sistema de Gestão de Tarefas Empresarial - TaskFlow Pro -->
+<!-- Aplicação web para gerenciamento de tarefas com prioridades, filtros e persistência local -->
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Gestão de Tarefas Empresarial | TaskFlow Pro</title>
+    <!-- Estilos CSS integrados para design responsivo e moderno -->
+    <style>
+        /* Variáveis CSS para cores e estilos consistentes */
+        :root {
+            --primary: #6366f1; /* Índigo moderno */
+            --primary-hover: #4f46e5;
+            --primary-light: #e0e7ff;
+            --secondary: #64748b;
+            --secondary-light: #f1f5f9;
+            --bg: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            --card-bg: #ffffff;
+            --text: #1e293b;
+            --text-muted: #64748b;
+            --text-light: #94a3b8;
+            --border: #e2e8f0;
+            --border-light: #f1f5f9;
+            --success: #10b981;
+            --success-light: #d1fae5;
+            --warning: #f59e0b;
+            --warning-light: #fef3c7;
+            --danger: #ef4444;
+            --danger-light: #fee2e2;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-hover: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            --shadow-lg: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --gradient-success: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            --gradient-warning: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            --gradient-danger: linear-gradient(135deg, #ff6b6b 0%, #ffa726 100%);
+        }
+
+        /* Reset e configurações globais */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Estilos do corpo da página */
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 1rem;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Elementos decorativos de fundo */
+        body::before {
+            content: '';
+            position: fixed;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(99, 102, 241, 0.05) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 20%, rgba(16, 185, 129, 0.05) 0%, transparent 50%),
+                        radial-gradient(circle at 20% 80%, rgba(245, 158, 11, 0.05) 0%, transparent 50%);
+            animation: float 20s ease-in-out infinite;
+            z-index: -1;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            33% { transform: translate(30px, -30px) rotate(120deg); }
+            66% { transform: translate(-20px, 20px) rotate(240deg); }
+        }
+
+        /* Container principal da aplicação */
+        .container {
+            background: var(--card-bg);
+            padding: 2.5rem;
+            border-radius: 24px;
+            box-shadow: var(--shadow-lg);
+            width: 100%;
+            max-width: 700px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            animation: containerFadeInScale 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes containerFadeInScale {
+            from {
+                opacity: 0;
+                transform: scale(0.95) translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .container:hover {
+            box-shadow: var(--shadow-hover);
+            transform: translateY(-4px);
+        }
+
+        /* Header da aplicação */
+        .app-header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+            position: relative;
+            animation: headerFadeInDown 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes headerFadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .app-header::before {
+            content: '';
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 4px;
+            background: var(--gradient-primary);
+            border-radius: 2px;
+        }
+
+        /* Título principal da aplicação */
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            position: relative;
+        }
+
+        h1::after {
+            content: '🚀';
+            position: absolute;
+            top: -5px;
+            right: -35px;
+            font-size: 1.5rem;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+            60% { transform: translateY(-5px); }
+        }
+
+        /* Subtítulo */
+        .subtitle {
+            font-size: 1.1rem;
+            color: var(--text-muted);
+            font-weight: 400;
+            margin-bottom: 1rem;
+        }
+
+        /* Badge de status */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: var(--primary-light);
+            color: var(--primary);
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-top: 1rem;
+        }
+
+        .status-badge::before {
+            content: '●';
+            color: var(--success);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Grupo de inputs para adicionar tarefas */
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            margin-bottom: 2.5rem;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.05) 0%, rgba(16, 185, 129, 0.05) 100%);
+            padding: 2rem;
+            border-radius: 16px;
+            border: 1px solid var(--border-light);
+            animation: formSlideDown 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes formSlideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Barra de pesquisa */
+        .search-group {
+            display: flex;
+            gap: 0.75rem;
+            margin-bottom: 2rem;
+            align-items: center;
+            background: var(--secondary-light);
+            padding: 1rem;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            animation: searchBarSlideIn 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes searchBarSlideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .search-group input {
+            flex: 1;
+            padding: 0.875rem 1rem;
+            border: 2px solid transparent;
+            border-radius: 8px;
+            font-size: 1rem;
+            background: var(--card-bg);
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .search-group input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+            transform: translateY(-1px);
+        }
+
+        .search-group button {
+            padding: 0.875rem 1.25rem;
+            background: var(--gradient-primary);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-weight: 600;
+            box-shadow: 0 3px 8px rgba(99, 102, 241, 0.2);
+            position: relative;
+            overflow: hidden;
+            outline: none;
+        }
+
+        .search-group button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .search-group button:hover::before {
+            left: 100%;
+        }
+
+        .search-group button:hover {
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 6px 16px rgba(99, 102, 241, 0.3);
+        }
+
+        .search-group button:active {
+            transform: translateY(0) scale(0.98);
+            box-shadow: 0 2px 6px rgba(99, 102, 241, 0.2);
+        }
+
+        /* Linha de inputs (descrição e prioridade) */
+        .input-row {
+            display: flex;
+            gap: 1rem;
+            align-items: stretch;
+        }
+
+        /* Estilos para o campo de texto */
+        input[type="text"] {
+            flex: 1;
+            padding: 1rem 1.25rem;
+            border: 2px solid var(--border);
+            border-radius: 16px;
+            font-size: 1rem;
+            background: linear-gradient(135deg, var(--card-bg), rgba(255, 255, 255, 0.8));
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            font-weight: 500;
+            position: relative;
+            backdrop-filter: blur(10px);
+            outline: none;
+        }
+
+        input[type="text"]:hover {
+            border-color: rgba(99, 102, 241, 0.3);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+            background: linear-gradient(135deg, var(--card-bg), rgba(255, 255, 255, 0.9));
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15), 0 8px 24px rgba(0, 0, 0, 0.15);
+            transform: translateY(-2px) scale(1.02);
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 1));
+            animation: inputFocusPulse 0.6s ease;
+        }
+
+        input[type="text"]:focus::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            border-radius: 18px;
+            z-index: -1;
+            opacity: 0.1;
+            animation: borderGlow 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes inputFocusPulse {
+            0% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-3px) scale(1.03); }
+            100% { transform: translateY(-2px) scale(1.02); }
+        }
+
+        @keyframes borderGlow {
+            0% { opacity: 0.1; }
+            100% { opacity: 0.2; }
+        }
+
+        input[type="text"]::placeholder {
+            color: var(--text-light);
+            font-weight: 400;
+            transition: all 0.3s ease;
+            opacity: 0.7;
+        }
+
+        input[type="text"]:focus::placeholder {
+            opacity: 0.5;
+            transform: translateX(4px);
+        }
+
+        /* Estilos para o seletor de prioridade */
+        select {
+            padding: 1rem 1.25rem;
+            border: 2px solid var(--border);
+            border-radius: 16px;
+            font-size: 1rem;
+            background: linear-gradient(135deg, var(--card-bg), rgba(255, 255, 255, 0.8));
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            font-weight: 500;
+            min-width: 180px;
+            backdrop-filter: blur(10px);
+            outline: none;
+            position: relative;
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+        }
+
+        select::after {
+            content: '▼';
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-light);
+            font-size: 0.8rem;
+            pointer-events: none;
+            transition: all 0.3s ease;
+        }
+
+        select:hover {
+            border-color: rgba(99, 102, 241, 0.3);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+            background: linear-gradient(135deg, var(--card-bg), rgba(255, 255, 255, 0.9));
+        }
+
+        select:hover::after {
+            color: var(--primary);
+            transform: translateY(-50%) rotate(180deg);
+        }
+
+        select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15), 0 8px 24px rgba(0, 0, 0, 0.15);
+            transform: translateY(-2px) scale(1.02);
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 1));
+            animation: selectFocusPulse 0.6s ease;
+        }
+
+        select:focus::after {
+            color: var(--primary);
+            transform: translateY(-50%) rotate(180deg) scale(1.1);
+        }
+
+        @keyframes selectFocusPulse {
+            0% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-3px) scale(1.03); }
+            100% { transform: translateY(-2px) scale(1.02); }
+        }
+
+        select option {
+            padding: 0.75rem 1rem;
+            background: var(--card-bg);
+            color: var(--text);
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        select option:hover {
+            background: var(--primary-light);
+            color: white;
+        }
+
+        /* Botões principais */
+        button {
+            padding: 1rem 2rem;
+            background: var(--gradient-primary);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
+            position: relative;
+            overflow: hidden;
+            outline: none;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            animation: buttonSlideUp 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes buttonSlideUp {
+            from {
+                opacity: 0;
+                transform: translateY(15px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        button::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        button:hover::before {
+            left: 100%;
+        }
+
+        button:hover {
+            transform: translateY(-4px) scale(1.05) rotateZ(-1deg);
+            box-shadow: 0 16px 40px rgba(99, 102, 241, 0.5);
+            animation: buttonBounce 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes buttonBounce {
+            0% { transform: translateY(-2px) scale(1.02) rotateZ(0deg); }
+            50% { transform: translateY(-6px) scale(1.08) rotateZ(-2deg); }
+            100% { transform: translateY(-4px) scale(1.05) rotateZ(-1deg); }
+        }
+
+        button:active::after {
+            width: 300px;
+            height: 300px;
+        }
+
+        button:active {
+            transform: translateY(-1px) scale(0.98);
+            box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
+            transition-duration: 0.1s;
+        }
+
+        button:focus-visible {
+            outline: 2px solid var(--primary);
+            outline-offset: 2px;
+        }
+
+        /* Botão primário especial */
+        .btn-primary {
+            background: var(--gradient-primary);
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+        }
+
+        .btn-primary:hover {
+            box-shadow: 0 8px 25px rgba(99, 102, 241, 0.5);
+        }
+
+        /* Botão de sucesso */
+        .btn-success {
+            background: var(--gradient-success);
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+        }
+
+        .btn-success:hover {
+            box-shadow: 0 8px 25px rgba(16, 185, 129, 0.5);
+        }
+
+        /* Botão de perigo */
+        .btn-danger {
+            background: var(--gradient-danger);
+            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
+        }
+
+        .btn-danger:hover {
+            box-shadow: 0 8px 25px rgba(239, 68, 68, 0.5);
+        }
+
+        /* Botão secundário */
+        .btn-secondary {
+            background: var(--secondary-light);
+            color: var(--text);
+            border: 2px solid var(--border);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-secondary:hover {
+            background: var(--card-bg);
+            border-color: var(--primary);
+            color: var(--primary);
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.2);
+        }
+
+        /* Botão pequeno */
+        .btn-sm {
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+            border-radius: 8px;
+        }
+
+        /* Botão grande */
+        .btn-lg {
+            padding: 1.25rem 2.5rem;
+            font-size: 1.125rem;
+            border-radius: 16px;
+        }
+
+        /* Botão circular */
+        .btn-circle {
+            width: 3rem;
+            height: 3rem;
+            padding: 0;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Botão com ícone */
+        .btn-icon {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-icon svg {
+            width: 1.25rem;
+            height: 1.25rem;
+        }
+
+        /* Estado de loading */
+        .btn-loading {
+            pointer-events: none;
+            position: relative;
+        }
+
+        .btn-loading::after {
+            content: '';
+            position: absolute;
+            width: 1rem;
+            height: 1rem;
+            top: 50%;
+            left: 50%;
+            margin-left: -0.5rem;
+            margin-top: -0.5rem;
+            border: 2px solid transparent;
+            border-top: 2px solid currentColor;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Estado desabilitado */
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+        }
+
+        button:disabled::before,
+        button:disabled::after {
+            display: none;
+        }
+
+        /* Botões de filtro para tarefas */
+        .filters {
+            display: flex;
+            gap: 0.75rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            justify-content: center;
+            background: var(--secondary-light);
+            padding: 1.5rem;
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            animation: filtersSlideIn 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes filtersSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-15px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .filter-btn {
+            padding: 0.875rem 1.75rem;
+            background: var(--card-bg);
+            border: 2px solid var(--border);
+            border-radius: 30px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            outline: none;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            backdrop-filter: blur(10px);
+        }
+
+        .filter-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: var(--gradient-primary);
+            transition: left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: -1;
+            border-radius: inherit;
+        }
+
+        .filter-btn::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+            z-index: -1;
+        }
+
+        .filter-btn.active {
+            color: white;
+            border-color: var(--primary);
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .filter-btn.active::before {
+            left: 0;
+        }
+
+        .filter-btn:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+            border-color: var(--primary);
+        }
+
+        .filter-btn:active::after {
+            width: 300px;
+            height: 300px;
+        }
+
+        .filter-btn:focus-visible {
+            outline: 2px solid var(--primary);
+            outline-offset: 2px;
+        }
+
+        /* Animações especiais para filtros */
+        .filter-btn[data-filter="all"] {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%);
+        }
+
+        .filter-btn[data-filter="pending"] {
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(251, 191, 36, 0.1) 100%);
+        }
+
+        .filter-btn[data-filter="completed"] {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(34, 197, 94, 0.1) 100%);
+        }
+
+        .filter-btn[data-filter="Alta"] {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(220, 38, 38, 0.1) 100%);
+        }
+
+        .filter-btn[data-filter="Média"] {
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(217, 119, 6, 0.1) 100%);
+        }
+
+        .filter-btn[data-filter="Baixa"] {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(5, 150, 105, 0.1) 100%);
+        }
+
+        /* Efeito de brilho nos filtros ativos */
+        .filter-btn.active {
+            animation: filterGlow 0.6s ease-out;
+        }
+
+        @keyframes filterGlow {
+            0% {
+                box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.7);
+            }
+            50% {
+                box-shadow: 0 0 0 10px rgba(99, 102, 241, 0);
+            }
+            100% {
+                box-shadow: 0 6px 20px rgba(99, 102, 241, 0.3);
+            }
+        }
+
+        /* Lista de tarefas */
+        ul {
+            list-style: none;
+            animation: listSlideIn 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Lista de tarefas */
+        ul {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            animation: listSlideIn 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes listSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Item individual de tarefa */
+        .task-item {
+            display: flex;
+            align-items: center;
+            padding: 1.25rem;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            margin-bottom: 1rem;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            cursor: pointer;
+            animation: slideInLeft 0.5s cubic-bezier(0.4, 0, 0.2, 1) both;
+        }
+
+        @keyframes slideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .task-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 6px;
+            background: var(--primary);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 0 4px 4px 0;
+            animation: expandVertical 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes expandVertical {
+            from {
+                height: 0;
+                top: 50%;
+            }
+            to {
+                height: 100%;
+                top: 0;
+            }
+        }
+
+        /* Estilização condicional por prioridade */
+        .task-item.urgency-Alta {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.08) 0%, rgba(239, 68, 68, 0.04) 100%);
+            border-left: 6px solid var(--danger);
+            box-shadow: 0 4px 16px rgba(239, 68, 68, 0.15);
+        }
+
+        .task-item.urgency-Alta::before {
+            background: var(--gradient-danger);
+            animation: pulse-danger 2s infinite;
+        }
+
+        .task-item.urgency-Média {
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.08) 0%, rgba(245, 158, 11, 0.04) 100%);
+            border-left: 6px solid var(--warning);
+            box-shadow: 0 4px 16px rgba(245, 158, 11, 0.15);
+        }
+
+        .task-item.urgency-Média::before {
+            background: var(--gradient-warning);
+        }
+
+        .task-item.urgency-Baixa {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(16, 185, 129, 0.04) 100%);
+            border-left: 6px solid var(--success);
+            box-shadow: 0 4px 16px rgba(16, 185, 129, 0.15);
+        }
+
+        .task-item.urgency-Baixa::before {
+            background: var(--gradient-success);
+        }
+
+        /* Animação de pulso para alta prioridade */
+        @keyframes pulse-danger {
+            0%, 100% { opacity: 1; transform: scaleY(1); }
+            50% { opacity: 0.7; transform: scaleY(1.2); }
+        }
+
+        .task-item:hover {
+            transform: translateY(-6px) scale(1.02) rotateZ(0.5deg);
+            box-shadow: var(--shadow-hover);
+            animation: hoverBounce 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes hoverBounce {
+            0% { transform: translateY(-4px) scale(1.02) rotateZ(0deg); }
+            50% { transform: translateY(-8px) scale(1.03) rotateZ(1deg); }
+            100% { transform: translateY(-6px) scale(1.02) rotateZ(0.5deg); }
+        }
+
+        /* Estilo para tarefas concluídas */
+        .task-item.completed {
+            opacity: 0.6;
+            background: #f8fafc;
+            border-left-color: var(--text-muted);
+            animation: slideOutRight 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards, fadeOut 0.3s ease 0.2s forwards;
+        }
+
+        @keyframes slideOutRight {
+            from {
+                opacity: 0.6;
+                transform: translateX(0);
+            }
+            to {
+                opacity: 0.3;
+                transform: translateX(50px);
+            }
+        }
+
+        @keyframes fadeOut {
+            from { opacity: 0.6; }
+            to { opacity: 0.3; }
+        }
+
+        .task-item.completed .task-text {
+            text-decoration: line-through;
+            color: var(--text-muted);
+            font-weight: normal;
+        }
+
+        .task-item.completed .priority-icon {
+            opacity: 0.5;
+        }
+
+        .task-item.completed .badge {
+            opacity: 0.7;
+        }
+
+        /* Checkbox para marcar tarefa como concluída */
+        .check-btn {
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            margin-right: 1rem;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            background: linear-gradient(135deg, var(--surface), rgba(255, 255, 255, 0.8));
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            outline: none;
+        }
+
+        .check-btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            border-radius: 4px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transform: translate(-50%, -50%);
+            opacity: 0;
+        }
+
+        .check-btn::after {
+            content: '✓';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            color: white;
+            font-weight: bold;
+            font-size: 14px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            opacity: 0;
+        }
+
+        .check-btn:hover {
+            border-color: var(--primary);
+            transform: scale(1.1) rotate(5deg);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(255, 255, 255, 0.9));
+        }
+
+        .check-btn:hover::before {
+            width: 20px;
+            height: 20px;
+            opacity: 0.3;
+        }
+
+        .check-btn:checked {
+            border-color: var(--primary);
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            animation: checkComplete 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 16px rgba(99, 102, 241, 0.3);
+        }
+
+        .check-btn:checked::before {
+            width: 20px;
+            height: 20px;
+            opacity: 1;
+        }
+
+        .check-btn:checked::after {
+            transform: translate(-50%, -50%) scale(1);
+            opacity: 1;
+            animation: checkMark 0.4s cubic-bezier(0.4, 0, 0.2, 1) 0.2s both;
+        }
+
+        @keyframes checkComplete {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2) rotate(10deg); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes checkMark {
+            0% {
+                transform: translate(-50%, -50%) scale(0) rotate(-180deg);
+                opacity: 0;
+            }
+            100% {
+                transform: translate(-50%, -50%) scale(1) rotate(0deg);
+                opacity: 1;
+            }
+        }
+
+        .check-btn:focus {
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+        }
+
+        /* Checkbox destacado para alta prioridade */
+        .task-item.urgency-Alta .check-btn {
+            border-color: var(--danger);
+            box-shadow: 0 2px 12px rgba(239, 68, 68, 0.2);
+        }
+
+        .task-item.urgency-Alta .check-btn::before {
+            background: linear-gradient(135deg, var(--danger), #dc2626);
+        }
+
+        .task-item.urgency-Alta .check-btn:hover {
+            border-color: var(--danger);
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(255, 255, 255, 0.9));
+            box-shadow: 0 6px 24px rgba(239, 68, 68, 0.25);
+        }
+
+        .task-item.urgency-Alta .check-btn:checked {
+            border-color: var(--danger);
+            background: linear-gradient(135deg, var(--danger), #dc2626);
+            box-shadow: 0 4px 20px rgba(239, 68, 68, 0.4);
+        }
+
+        .task-item.urgency-Alta .check-btn:focus {
+            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.3);
+        }
+
+        /* Ícone de prioridade */
+        .priority-icon {
+            font-size: 1.4rem;
+            margin-right: 0.75rem;
+            display: inline-block;
+            transition: transform 0.3s ease;
+        }
+
+        .task-item:hover .priority-icon {
+            transform: scale(1.1);
+        }
+
+        /* Texto da tarefa com estilização condicional */
+        .task-text {
+            flex: 1;
+            font-size: 1.1rem;
+            line-height: 1.6;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .task-item:hover .task-text {
+            transform: translateX(2px);
+        }
+
+        /* Destaque visual para tarefas de alta prioridade */
+        .task-item.urgency-Alta .task-text {
+            font-weight: 700;
+            color: var(--danger);
+            text-shadow: 0 1px 2px rgba(239, 68, 68, 0.1);
+        }
+
+        .task-item.urgency-Média .task-text {
+            font-weight: 600;
+            color: var(--warning);
+        }
+
+        .task-item.urgency-Baixa .task-text {
+            font-weight: 500;
+            color: var(--text);
+        }
+
+        /* Badge indicando prioridade */
+        .badge {
+            font-size: 0.8rem;
+            font-weight: 700;
+            padding: 0.4rem 1rem;
+            border-radius: 20px;
+            color: white;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            animation: badgePopIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        @keyframes badgePopIn {
+            0% {
+                transform: scale(0) rotate(-180deg);
+                opacity: 0;
+            }
+            100% {
+                transform: scale(1) rotate(0deg);
+                opacity: 1;
+            }
+        }
+
+        .badge:hover {
+            transform: translateY(-3px) scale(1.08);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+            animation: badgeFloat 0.6s ease-in-out infinite;
+        }
+
+        @keyframes badgeFloat {
+            0%, 100% { transform: translateY(-3px) scale(1.08); }
+            50% { transform: translateY(-6px) scale(1.1); }
+        }
+
+        /* Cores e ícones dos badges por prioridade */
+        .urgency-Alta {
+            background: var(--gradient-danger);
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+        }
+
+        .urgency-Alta::before {
+            content: '🔥';
+            font-size: 0.8rem;
+            animation: flame 1.5s ease-in-out infinite;
+        }
+
+        @keyframes flame {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .urgency-Média {
+            background: var(--gradient-warning);
+            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
+        }
+
+        .urgency-Média::before {
+            content: '⚡';
+            font-size: 0.8rem;
+        }
+
+        .urgency-Baixa {
+            background: var(--gradient-success);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+        }
+
+        .urgency-Baixa::before {
+            content: '✅';
+            font-size: 0.8rem;
+        }
+
+        /* Botão de deletar tarefa */
+        .delete-btn {
+            background: var(--card-bg);
+            border: 2px solid var(--border);
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 1rem;
+            padding: 0.625rem 0.875rem;
+            border-radius: 10px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            margin-left: 1rem;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+            font-weight: 600;
+            position: relative;
+            overflow: hidden;
+            outline: none;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            animation: slideInDown 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes slideInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .delete-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: var(--gradient-danger);
+            transition: left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: -1;
+        }
+
+        .delete-btn::after {
+            content: '🗑️';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            transition: all 0.3s ease;
+            opacity: 0;
+            font-size: 1.2rem;
+        }
+
+        .delete-btn:hover {
+            color: white;
+            border-color: var(--danger);
+            transform: translateY(-3px) scale(1.08) rotate(-5deg);
+            box-shadow: 0 8px 25px rgba(239, 68, 68, 0.4);
+            animation: deleteShake 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes deleteShake {
+            0% { transform: translateY(-3px) scale(1.08) rotate(-5deg); }
+            25% { transform: translateY(-3px) scale(1.08) rotate(5deg); }
+            50% { transform: translateY(-3px) scale(1.08) rotate(-5deg); }
+            75% { transform: translateY(-3px) scale(1.08) rotate(5deg); }
+            100% { transform: translateY(-3px) scale(1.08) rotate(-5deg); }
+        }
+
+        .delete-btn:hover::before {
+            left: 0;
+        }
+
+        .delete-btn:hover::after {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1.2);
+        }
+
+        .delete-btn:active {
+            transform: translateY(-1px) scale(1.02);
+            box-shadow: 0 3px 12px rgba(239, 68, 68, 0.3);
+            transition-duration: 0.1s;
+        }
+
+        .delete-btn:focus-visible {
+            outline: 2px solid var(--danger);
+            outline-offset: 2px;
+        }
+
+        /* Estatísticas das tarefas */
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 2.5rem;
+            padding: 1.5rem;
+            background: var(--secondary-light);
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            font-size: 0.9rem;
+            font-weight: 600;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            animation: statsSlideIn 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes statsSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .stats > div {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1rem;
+            background: var(--card-bg);
+            border-radius: 12px;
+            border: 1px solid var(--border-light);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            animation: statItemPop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        @keyframes statItemPop {
+            0% {
+                transform: scale(0) rotate(-180deg);
+                opacity: 0;
+            }
+            100% {
+                transform: scale(1) rotate(0deg);
+                opacity: 1;
+            }
+        }
+
+        .stats > div:hover {
+            transform: translateY(-4px) scale(1.05);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+            animation: statFloat 0.6s ease-in-out infinite;
+        }
+
+        @keyframes statFloat {
+            0%, 100% { transform: translateY(-4px) scale(1.05); }
+            50% { transform: translateY(-7px) scale(1.07); }
+        }
+
+        .clear-btn {
+            background: var(--gradient-danger);
+            color: white;
+            border: none;
+            padding: 0.875rem 1.75rem;
+            border-radius: 14px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 600;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+            position: relative;
+            overflow: hidden;
+            outline: none;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            animation: slideInUp 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .clear-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.5s;
+        }
+
+        .clear-btn::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .clear-btn:hover::before {
+            left: 100%;
+        }
+
+        .clear-btn:hover {
+            transform: translateY(-4px) scale(1.08) rotateZ(2deg);
+            box-shadow: 0 12px 30px rgba(239, 68, 68, 0.5);
+            animation: clearPulse 0.6s ease-in-out infinite;
+        }
+
+        @keyframes clearPulse {
+            0%, 100% { transform: translateY(-4px) scale(1.08) rotateZ(2deg); }
+            50% { transform: translateY(-6px) scale(1.1) rotateZ(-2deg); }
+        }
+
+        .clear-btn:active::after {
+            width: 300px;
+            height: 300px;
+        }
+
+        .clear-btn:active {
+            transform: translateY(-1px) scale(0.98);
+            box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+            transition-duration: 0.1s;
+        }
+
+        .clear-btn:focus-visible {
+            outline: 2px solid var(--danger);
+            outline-offset: 2px;
+        }
+
+        /* Media queries para responsividade */
+        @media (max-width: 768px) {
+            .container {
+                padding: 1.5rem;
+                margin: 0.5rem;
+                max-width: 100%;
+            }
+
+            .app-header h1 {
+                font-size: 2rem;
+            }
+
+            .input-row {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .filters {
+                justify-content: center;
+                gap: 0.5rem;
+            }
+
+            .filter-btn {
+                padding: 0.6rem 1rem;
+                font-size: 0.85rem;
+            }
+
+            .stats {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+
+            .task-item {
+                padding: 1rem;
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.75rem;
+            }
+
+            .task-item .delete-btn {
+                align-self: flex-end;
+                margin-left: 0;
+                margin-top: 0.5rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 0.5rem;
+            }
+
+            .container {
+                padding: 1rem;
+                border-radius: 16px;
+            }
+
+            .app-header h1 {
+                font-size: 1.75rem;
+            }
+
+            .input-group {
+                padding: 1.5rem;
+            }
+
+            .filters {
+                padding: 1rem;
+                gap: 0.4rem;
+            }
+
+            .filter-btn {
+                padding: 0.5rem 0.8rem;
+                font-size: 0.8rem;
+            }
+
+            .task-item {
+                padding: 0.875rem;
+            }
+
+            .badge {
+                font-size: 0.7rem;
+                padding: 0.3rem 0.8rem;
+            }
+        }
+
+        /* Sistema de notificações */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 1.25rem 1.75rem;
+            border-radius: 16px;
+            color: white;
+            font-weight: 600;
+            font-size: 0.95rem;
+            box-shadow: var(--shadow-lg);
+            z-index: 1000;
+            animation: slideInBounce 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            max-width: 350px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        /* Sistema de Paginação */
+        .pagination-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            margin-top: 2rem;
+            animation: paginationSlideIn 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes paginationSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(15px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .task-list-wrapper {
+            min-height: 550px;
+            max-height: 550px;
+            overflow-y: auto;
+            padding-right: 0.5rem;
+            border-radius: 12px;
+            background: var(--secondary-light);
+            border: 1px solid var(--border);
+        }
+
+        .task-list-wrapper::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .task-list-wrapper::-webkit-scrollbar-track {
+            background: var(--border-light);
+            border-radius: 10px;
+        }
+
+        .task-list-wrapper::-webkit-scrollbar-thumb {
+            background: var(--primary);
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .task-list-wrapper::-webkit-scrollbar-thumb:hover {
+            background: var(--primary-hover);
+            box-shadow: 0 0 6px rgba(99, 102, 241, 0.5);
+        }
+
+        .pagination-info {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            background: var(--secondary-light);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            font-weight: 600;
+            color: var(--text);
+            flex-wrap: wrap;
+            animation: infoSlideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes infoSlideUp {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .page-number {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        .pagination-controls {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+            padding: 0.75rem;
+            background: var(--secondary-light);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            animation: controlsSlideUp 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes controlsSlideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .pagination-controls button {
+            padding: 0.7rem 1.5rem;
+            background: var(--card-bg);
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-size: 0.9rem;
+            position: relative;
+            overflow: hidden;
+            color: var(--text);
+            animation: buttonFadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes buttonFadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .pagination-controls button:hover:not(:disabled) {
+            transform: translateY(-2px) scale(1.05);
+            border-color: var(--primary);
+            box-shadow: 0 6px 16px rgba(99, 102, 241, 0.3);
+            background: var(--primary-light);
+        }
+
+        .pagination-controls button:active:not(:disabled) {
+            transform: translateY(0) scale(0.98);
+        }
+
+        .pagination-controls button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            color: var(--text-muted);
+        }
+
+        .pagination-controls button.active {
+            background: var(--gradient-primary);
+            color: white;
+            border-color: var(--primary);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+            animation: pageActive 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        @keyframes pageActive {
+            0% {
+                transform: scale(0.8);
+                opacity: 0;
+            }
+            50% {
+                transform: scale(1.1);
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .pagination-nav {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .page-btn {
+            min-width: 40px;
+            height: 40px;
+            padding: 0 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--card-bg);
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-size: 0.9rem;
+            color: var(--text);
+        }
+
+        .page-btn:hover:not(:disabled) {
+            transform: translateY(-2px) scale(1.1);
+            border-color: var(--primary);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
+            background: var(--primary-light);
+        }
+
+        .page-btn.active {
+            background: var(--gradient-primary);
+            color: white;
+            border-color: var(--primary);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+        }
+
+        .page-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .notification::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.8);
+            animation: notificationPulse 2s infinite;
+        }
+
+        .notification.success {
+            background: var(--gradient-success);
+            box-shadow: 0 8px 32px rgba(16, 185, 129, 0.3);
+        }
+
+        .notification.error {
+            background: var(--gradient-danger);
+            box-shadow: 0 8px 32px rgba(239, 68, 68, 0.3);
+        }
+
+        .notification.warning {
+            background: var(--gradient-warning);
+            box-shadow: 0 8px 32px rgba(245, 158, 11, 0.3);
+        }
+
+        .notification.info {
+            background: var(--gradient-primary);
+            box-shadow: 0 8px 32px rgba(99, 102, 241, 0.3);
+        }
+
+        @keyframes slideInBounce {
+            0% {
+                transform: translateX(100%) scale(0.8);
+                opacity: 0;
+            }
+            50% {
+                transform: translateX(-10px) scale(1.05);
+                opacity: 0.8;
+            }
+            100% {
+                transform: translateX(0) scale(1);
+                opacity: 1;
+            }
+        }
+
+        @keyframes notificationPulse {
+            0%, 100% { opacity: 0.8; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.2); }
+        }
+
+        /* Lista vazia */
+        .empty-state {
+            text-align: center;
+            padding: 3rem 2rem;
+            color: var(--text-muted);
+            background: var(--secondary-light);
+            border-radius: 16px;
+            border: 2px dashed var(--border);
+            margin: 2rem 0;
+        }
+
+        .empty-state h3 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+            color: var(--text);
+        }
+
+        .empty-state p {
+            font-size: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .empty-state::before {
+            content: '📝';
+            font-size: 3rem;
+            display: block;
+            margin-bottom: 1rem;
+            opacity: 0.6;
+        }
+
+        /* Melhorias de acessibilidade */
+        .task-item:focus-within {
+            outline: 2px solid var(--primary);
+            outline-offset: 2px;
+        }
+
+        /* Animações de entrada para novas tarefas */
+        .task-item:nth-child(odd) {
+            animation: slideInLeft 0.5s ease-out;
+        }
+
+        .task-item:nth-child(even) {
+            animation: slideInRight 0.5s ease-out;
+        }
+
+        @keyframes slideInLeft {
+            from {
+                transform: translateX(-30px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideInRight {
+            from {
+                transform: translateX(30px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+            /* Estilos para data/hora da tarefa */
+        .task-date {
+            font-size: 0.75rem;
+            color: var(--text-light);
+            font-weight: 500;
+            padding: 0.4rem 0.8rem;
+            background: rgba(99, 102, 241, 0.05);
+            border-radius: 8px;
+            border-left: 3px solid var(--primary);
+            transition: all 0.3s ease;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .task-date::before {
+            content: '📅';
+            font-size: 0.85rem;
+        }
+
+        .task-item:hover .task-date {
+            background: var(--primary-light);
+            color: var(--primary);
+            border-left-color: var(--primary);
+            box-shadow: 0 2px 8px rgba(99, 102, 241, 0.15);
+        }
+
+        .task-item.completed .task-date {
+            opacity: 0.6;
+            border-left-color: var(--text-muted);
+        }
+
+        /* Estilos para data de vencimento */
+        .task-due-date {
+            font-size: 0.75rem;
+            color: white;
+            font-weight: 600;
+            padding: 0.4rem 0.8rem;
+            border-radius: 8px;
+            border-left: 3px solid;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .task-due-date::before {
+            content: '⏰';
+            font-size: 0.85rem;
+        }
+
+        /* Status da data de vencimento */
+        .task-due-date.overdue {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            border-left-color: #991b1b;
+            box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+        }
+
+        .task-due-date.upcoming {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            border-left-color: #92400e;
+            box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+        }
+
+        .task-due-date.safe {
+            background: linear-gradient(135deg, #10b981, #059669);
+            border-left-color: #064e3b;
+            box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+        }
+
+        .task-item:hover .task-due-date {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .task-item.completed .task-due-date {
+            opacity: 0.6;
+        }
+
+        /* Container da data de vencimento */
+        .task-due-container {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .loading::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 20px;
+            height: 20px;
+            margin: -10px 0 0 -10px;
+            border: 2px solid var(--primary);
+            border-top: 2px solid transparent;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Corpo da aplicação -->
+    <div class="container">
+        <!-- Header da aplicação -->
+        <div class="app-header">
+            <h1>TaskFlow Pro</h1>
+            <p class="subtitle">Gerencie suas tarefas com eficiência e estilo</p>
+            <div class="status-badge">
+                <span>Sistema Online</span>
+            </div>
+        </div>
+
+        <!-- Formulário para adicionar novas tarefas -->
+        <div class="input-group">
+            <div class="input-row">
+                <input type="text" id="task-desc" placeholder="✨ Digite uma nova tarefa..." aria-label="Descrição da tarefa" required>
+                <select id="task-urgency" aria-label="Prioridade da tarefa">
+                    <option value="Baixa">🟢 Baixa Prioridade</option>
+                    <option value="Média">🟡 Média Prioridade</option>
+                    <option value="Alta">🔴 Alta Prioridade</option>
+                </select>
+            </div>
+            <div class="input-row">
+                <input type="datetime-local" id="task-due-date" placeholder="📅 Data e hora de vencimento" aria-label="Data e hora de vencimento da tarefa">
+            </div>
+            <button id="add-btn" aria-label="Adicionar nova tarefa">➕ Adicionar Tarefa</button>
+        </div>
+
+        <!-- Barra de pesquisa -->
+        <div class="search-group">
+            <input type="text" id="search-input" placeholder="🔍 Pesquisar tarefas..." aria-label="Pesquisar tarefas">
+            <button id="clear-search" style="display: none;" aria-label="Limpar pesquisa">✕</button>
+        </div>
+
+        <!-- Botões de filtro -->
+        <div class="filters" role="group" aria-label="Filtros de tarefas">
+            <button class="filter-btn active" data-filter="all" aria-pressed="true">📋 Todas</button>
+            <button class="filter-btn" data-filter="pending" aria-pressed="false">⏳ Pendentes</button>
+            <button class="filter-btn" data-filter="completed" aria-pressed="false">✅ Concluídas</button>
+            <button class="filter-btn" data-filter="Alta" aria-pressed="false">🔴 Alta</button>
+            <button class="filter-btn" data-filter="Média" aria-pressed="false">🟡 Média</button>
+            <button class="filter-btn" data-filter="Baixa" aria-pressed="false">🟢 Baixa</button>
+        </div>
+
+        <!-- Lista de tarefas com wrapper -->
+        <div class="task-list-wrapper">
+            <ul id="task-list" aria-label="Lista de tarefas"></ul>
+        </div>
+
+        <!-- Sistema de Paginação -->
+        <div class="pagination-container" id="pagination-container">
+            <div class="pagination-info">
+                <span class="page-number" id="page-info">Página 1 de 1</span>
+                <span id="items-info">0 tarefas</span>
+            </div>
+            <div class="pagination-controls">
+                <button id="prev-btn" class="pagination-controls-btn" aria-label="Página anterior">⬅️ Anterior</button>
+                <div class="pagination-nav" id="pagination-nav"></div>
+                <button id="next-btn" class="pagination-controls-btn" aria-label="Próxima página">Próxima ➡️</button>
+            </div>
+        </div>
+
+        <!-- Estatísticas das tarefas -->
+        <div class="stats">
+            <div id="total-tasks">Total: 0</div>
+            <div id="pending-tasks">Pendentes: 0</div>
+            <div id="completed-tasks">Concluídas: 0</div>
+            <button id="clear-completed" class="clear-btn" style="display: none;">🗑️ Limpar Concluídas</button>
+        </div>
+    </div>
+
+    <!-- JavaScript para funcionalidade da aplicação -->
+    <script>
+        // Variáveis globais para elementos DOM
+        let tasks = [];
+        let taskInput, urgencyInput, addBtn, searchInput, clearSearchBtn, taskList;
+        let filterBtns, totalTasksEl, pendingTasksEl, completedTasksEl, clearCompletedBtn;
+        let dueDateInput; // Novo input para data de vencimento
+        
+        // Variáveis para paginação
+        let currentPage = 1;
+        const TASKS_PER_PAGE = 5;
+        let prevBtn, nextBtn, paginationNav, pageInfo, itemsInfo;
+        let currentFilter = 'all';
+
+        // Carregar tarefas do localStorage ao iniciar
+        try {
+            const savedTasks = localStorage.getItem('tasks');
+            if (savedTasks) {
+                tasks = JSON.parse(savedTasks);
+            }
+        } catch (error) {
+            console.error('Erro ao carregar tarefas salvas:', error);
+            tasks = [];
+        }
+
+        // Inicializar elementos DOM quando o documento estiver pronto
+        document.addEventListener('DOMContentLoaded', () => {
+            // Obter referências dos elementos
+            taskInput = document.getElementById('task-desc');
+            urgencyInput = document.getElementById('task-urgency');
+            addBtn = document.getElementById('add-btn');
+            searchInput = document.getElementById('search-input');
+            clearSearchBtn = document.getElementById('clear-search');
+            taskList = document.getElementById('task-list');
+            filterBtns = document.querySelectorAll('.filter-btn');
+            totalTasksEl = document.getElementById('total-tasks');
+            pendingTasksEl = document.getElementById('pending-tasks');
+            completedTasksEl = document.getElementById('completed-tasks');
+            clearCompletedBtn = document.getElementById('clear-completed');
+            dueDateInput = document.getElementById('task-due-date'); // Novo input
+            
+            // Obter referências dos elementos de paginação
+            prevBtn = document.getElementById('prev-btn');
+            nextBtn = document.getElementById('next-btn');
+            paginationNav = document.getElementById('pagination-nav');
+            pageInfo = document.getElementById('page-info');
+            itemsInfo = document.getElementById('items-info');
+
+            // Verificar se todos os elementos foram encontrados
+            if (!taskInput || !urgencyInput || !addBtn || !taskList) {
+                console.error('Erro: Elementos DOM necessários não encontrados');
+                return;
+            }
+
+            // Configurar event listeners
+            setupEventListeners();
+
+            // Renderização inicial das tarefas
+            renderTasks();
+        });
+
+        // Função para configurar todos os event listeners
+        function setupEventListeners() {
+            // Evento para adicionar tarefa
+            addBtn.addEventListener('click', () => {
+                const text = taskInput.value.trim();
+                const urgency = urgencyInput.value;
+
+                if (text === '') {
+                    showNotification('Por favor, digite uma descrição para a tarefa.', 'error');
+                    taskInput.focus();
+                    return;
+                }
+
+                if (text.length < 3) {
+                    showNotification('A tarefa deve ter pelo menos 3 caracteres.', 'warning');
+                    taskInput.focus();
+                    return;
+                }
+
+                // Verificar duplicatas (case insensitive)
+                const duplicate = tasks.find(task => task.text.toLowerCase() === text.toLowerCase());
+                if (duplicate) {
+                    showNotification('Esta tarefa já existe!', 'warning');
+                    taskInput.focus();
+                    return;
+                }
+
+                tasks.push({ text, urgency, completed: false, createdAt: new Date().toISOString() });
+                saveTasks();
+                renderTasks(getCurrentFilter());
+                taskInput.value = '';
+                showNotification('Tarefa adicionada com sucesso!', 'success');
+            });
+
+            // Eventos para os botões de filtro
+            filterBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    filterBtns.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    currentPage = 1; // Resetar para primeira página ao mudar filtro
+                    renderTasks(btn.dataset.filter);
+                });
+            });
+
+            // Evento para adicionar tarefa ao pressionar Enter
+            taskInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    addBtn.click();
+                }
+            });
+
+            // Eventos de pesquisa
+            if (searchInput) {
+                searchInput.addEventListener('input', () => {
+                    if (clearSearchBtn) {
+                        clearSearchBtn.style.display = searchInput.value ? 'block' : 'none';
+                    }
+                    currentPage = 1; // Resetar para primeira página ao pesquisar
+                    renderTasks(getCurrentFilter());
+                });
+            }
+
+            if (clearSearchBtn) {
+                clearSearchBtn.addEventListener('click', () => {
+                    if (searchInput) {
+                        searchInput.value = '';
+                        clearSearchBtn.style.display = 'none';
+                        renderTasks(getCurrentFilter());
+                    }
+                });
+            }
+
+            // Evento para limpar tarefas concluídas
+            if (clearCompletedBtn) {
+                clearCompletedBtn.addEventListener('click', () => {
+                    if (confirm('Tem certeza que deseja remover todas as tarefas concluídas?')) {
+                        tasks = tasks.filter(task => !task.completed);
+                        saveTasks();
+                        renderTasks(getCurrentFilter());
+                        showNotification('Tarefas concluídas removidas!', 'success');
+                    }
+                });
+            }
+
+            // Atalhos de teclado globais
+            document.addEventListener('keydown', (e) => {
+                // Ctrl+Enter para adicionar tarefa
+                if (e.ctrlKey && e.key === 'Enter') {
+                    e.preventDefault();
+                    addBtn.click();
+                }
+
+                // Escape para limpar pesquisa
+                if (e.key === 'Escape' && document.activeElement === searchInput) {
+                    if (searchInput) {
+                        searchInput.value = '';
+                        if (clearSearchBtn) {
+                            clearSearchBtn.style.display = 'none';
+                        }
+                        currentPage = 1; // Resetar página ao limpar pesquisa
+                        renderTasks(getCurrentFilter());
+                    }
+                }
+
+                // Setas do teclado para navegação de páginas
+                if (e.key === 'ArrowRight' && !prevBtn.disabled && prevBtn.style.display !== 'none') {
+                    e.preventDefault();
+                    if (currentPage < getTotalPages(getCurrentFilter())) {
+                        currentPage++;
+                        renderTasks(getCurrentFilter());
+                        document.querySelector('.task-list-wrapper').scrollTop = 0;
+                    }
+                }
+
+                if (e.key === 'ArrowLeft' && !nextBtn.disabled && nextBtn.style.display !== 'none') {
+                    e.preventDefault();
+                    if (currentPage > 1) {
+                        currentPage--;
+                        renderTasks(getCurrentFilter());
+                        document.querySelector('.task-list-wrapper').scrollTop = 0;
+                    }
+                }
+            });
+
+            // Event listeners para botões de paginação
+            if (prevBtn) {
+                prevBtn.addEventListener('click', () => {
+                    if (currentPage > 1) {
+                        currentPage--;
+                        renderTasks(getCurrentFilter());
+                        document.querySelector('.task-list-wrapper').scrollTop = 0;
+                    }
+                });
+            }
+
+            if (nextBtn) {
+                nextBtn.addEventListener('click', () => {
+                    const totalPages = getTotalPages(getCurrentFilter());
+                    if (currentPage < totalPages) {
+                        currentPage++;
+                        renderTasks(getCurrentFilter());
+                        document.querySelector('.task-list-wrapper').scrollTop = 0;
+                    }
+                });
+            }
+        }
+
+        // Função para mostrar notificações
+        function showNotification(message, type = 'info') {
+            // Remover notificação existente
+            const existingNotification = document.querySelector('.notification');
+            if (existingNotification) {
+                existingNotification.remove();
+            }
+
+            // Criar nova notificação
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = message;
+            notification.setAttribute('role', 'alert');
+            notification.setAttribute('aria-live', 'assertive');
+
+            // Adicionar ao container
+            document.querySelector('.container').appendChild(notification);
+
+            // Auto-remover após 3 segundos
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.remove();
+                }
+            }, 3000);
+        }
+
+        // Função para formatar data e hora em português
+        function formatDateTime(isoString) {
+            try {
+                const date = new Date(isoString);
+                const day = String(date.getDate()).padStart(2, '0');
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const year = date.getFullYear();
+                const hours = String(date.getHours()).padStart(2, '0');
+                const minutes = String(date.getMinutes()).padStart(2, '0');
+                return `${day}/${month}/${year} às ${hours}:${minutes}`;
+            } catch (error) {
+                return 'Data indisponível';
+            }
+        }
+
+        // Função para formatar apenas a data e hora (para vencimento)
+        function formatDueDateTime(isoString) {
+            try {
+                if (!isoString) return null;
+                const date = new Date(isoString);
+                const day = String(date.getDate()).padStart(2, '0');
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const hours = String(date.getHours()).padStart(2, '0');
+                const minutes = String(date.getMinutes()).padStart(2, '0');
+                return `${day}/${month} ${hours}:${minutes}`;
+            } catch (error) {
+                return null;
+            }
+        }
+
+        // Função para determinar o status de vencimento
+        function getDueStatus(isoString) {
+            if (!isoString) return null;
+            const dueDate = new Date(isoString);
+            const now = new Date();
+            const diffHours = (dueDate - now) / (1000 * 60 * 60);
+
+            if (diffHours < 0) return 'overdue'; // Atrasado
+            if (diffHours < 24) return 'upcoming'; // Próximas 24 horas
+            return 'safe'; // Seguro
+        }
+
+        // Função para obter mensagem de status
+        function getDueStatusMessage(isoString) {
+            if (!isoString) return '';
+            const dueDate = new Date(isoString);
+            const now = new Date();
+            const diffHours = (dueDate - now) / (1000 * 60 * 60);
+            const diffDays = Math.floor(diffHours / 24);
+
+            if (diffHours < 0) {
+                const overdueDays = Math.floor(Math.abs(diffHours) / 24);
+                return overdueDays === 0 ? 'Atrasado' : `${overdueDays}d atrasado`;
+            }
+            if (diffHours < 1) {
+                const mins = Math.floor(diffHours * 60);
+                return `${mins}min`;
+            }
+            if (diffHours < 24) {
+                return `${Math.floor(diffHours)}h`;
+            }
+            return `${diffDays}d`;
+        }
+
+        // Função para obter ícone de prioridade
+        function getPriorityIcon(urgency) {
+            switch(urgency) {
+                case 'Alta': return '🚨';
+                case 'Média': return '⚠️';
+                case 'Baixa': return '✅';
+                default: return '📝';
+            }
+        }
+
+        // Função para salvar tarefas com tratamento de erro
+        function saveTasks() {
+            try {
+                localStorage.setItem('tasks', JSON.stringify(tasks));
+            } catch (error) {
+                console.error('Erro ao salvar tarefas:', error);
+                showNotification('Erro ao salvar dados localmente', 'error');
+            }
+        }
+
+        // Função para obter o filtro atual ativo
+        function getCurrentFilter() {
+            const activeBtn = document.querySelector('.filter-btn.active');
+            return activeBtn ? activeBtn.dataset.filter : 'all';
+        }
+
+        // Função para obter tarefas filtradas
+        function getFilteredTasks(filter = 'all') {
+            const searchTerm = searchInput ? searchInput.value.toLowerCase().trim() : '';
+            let filteredTasks = tasks;
+
+            // Aplicar filtro de status
+            if (filter === 'pending') {
+                filteredTasks = tasks.filter(task => !task.completed);
+            } else if (filter === 'completed') {
+                filteredTasks = tasks.filter(task => task.completed);
+            } else if (['Alta', 'Média', 'Baixa'].includes(filter)) {
+                filteredTasks = tasks.filter(task => task.urgency === filter);
+            }
+
+            // Aplicar filtro de pesquisa
+            if (searchTerm) {
+                filteredTasks = filteredTasks.filter(task =>
+                    task.text.toLowerCase().includes(searchTerm) ||
+                    task.urgency.toLowerCase().includes(searchTerm)
+                );
+            }
+
+            return filteredTasks;
+        }
+
+        // Função para calcular total de páginas
+        function getTotalPages(filter = 'all') {
+            const filteredTasks = getFilteredTasks(filter);
+            return Math.max(1, Math.ceil(filteredTasks.length / TASKS_PER_PAGE));
+        }
+
+        // Função para atualizar controles de paginação
+        function updatePaginationControls(filter = 'all') {
+            const totalPages = getTotalPages(filter);
+            const filteredTasks = getFilteredTasks(filter);
+
+            // Resetar página se necessário
+            if (currentPage > totalPages) {
+                currentPage = totalPages;
+            }
+
+            // Atualizar info de página
+            pageInfo.textContent = `Página ${currentPage} de ${totalPages}`;
+            itemsInfo.textContent = `${filteredTasks.length} ${filteredTasks.length === 1 ? 'tarefa' : 'tarefas'}`;
+
+            // Atualizar botões Anterior/Próxima
+            prevBtn.disabled = currentPage === 1;
+            nextBtn.disabled = currentPage === totalPages;
+
+            // Gerar botões de página
+            paginationNav.innerHTML = '';
+            if (totalPages <= 1) {
+                // Não mostrar paginação se houver apenas uma página
+                prevBtn.style.display = 'none';
+                nextBtn.style.display = 'none';
+            } else {
+                prevBtn.style.display = 'block';
+                nextBtn.style.display = 'block';
+
+                for (let i = 1; i <= totalPages; i++) {
+                    const btn = document.createElement('button');
+                    btn.className = `page-btn ${i === currentPage ? 'active' : ''}`;
+                    btn.textContent = i;
+                    btn.disabled = i === currentPage;
+
+                    btn.addEventListener('click', () => {
+                        currentPage = i;
+                        renderTasks(filter);
+                        // Scroll para o topo da lista
+                        document.querySelector('.task-list-wrapper').scrollTop = 0;
+                    });
+
+                    paginationNav.appendChild(btn);
+                }
+            }
+        }
+
+        // Função para atualizar as estatísticas das tarefas
+        function updateStats() {
+            const total = tasks.length;
+            const pending = tasks.filter(task => !task.completed).length;
+            const completed = tasks.filter(task => task.completed).length;
+
+            totalTasksEl.textContent = `Total: ${total}`;
+            pendingTasksEl.textContent = `Pendentes: ${pending}`;
+            completedTasksEl.textContent = `Concluídas: ${completed}`;
+
+            // Mostrar/esconder botão de limpar concluídas
+            const clearBtn = document.getElementById('clear-completed');
+            if (clearBtn) {
+                clearBtn.style.display = completed > 0 ? 'block' : 'none';
+            }
+        }
+
+        // Função para renderizar tarefas na tela com filtro opcional
+        function renderTasks(filter = 'all') {
+            const searchTerm = searchInput ? searchInput.value.toLowerCase().trim() : '';
+            taskList.innerHTML = '';
+            let filteredTasks = getFilteredTasks(filter);
+
+            // Atualizar página atual
+            currentFilter = filter;
+
+            // Calcular índices para paginação
+            const startIndex = (currentPage - 1) * TASKS_PER_PAGE;
+            const endIndex = startIndex + TASKS_PER_PAGE;
+            const paginatedTasks = filteredTasks.slice(startIndex, endIndex);
+
+            // Renderizar cada tarefa na página atual
+            paginatedTasks.forEach((task) => {
+                const originalIndex = tasks.indexOf(task);
+                const li = document.createElement('li');
+                li.className = `task-item urgency-${task.urgency}${task.completed ? ' completed' : ''}`;
+
+                li.innerHTML = `
+                    <input type="checkbox" class="check-btn" ${task.completed ? 'checked' : ''}>
+                    <span class="priority-icon">${getPriorityIcon(task.urgency)}</span>
+                    <span class="task-text">${task.text}</span>
+                    <span class="badge urgency-${task.urgency}">${task.urgency}</span>
+                    <span class="task-date">${formatDateTime(task.createdAt)}</span>
+                    <button class="delete-btn" data-original-index="${originalIndex}">×</button>
+                `;
+
+                // Evento para marcar/desmarcar tarefa como concluída
+                const checkbox = li.querySelector('.check-btn');
+                checkbox.addEventListener('change', () => {
+                    task.completed = checkbox.checked;
+                    saveTasks();
+                    updateStats();
+                    renderTasks(getCurrentFilter());
+                });
+
+                // Evento para deletar tarefa
+                const deleteBtn = li.querySelector('.delete-btn');
+                deleteBtn.addEventListener('click', () => {
+                    const index = parseInt(deleteBtn.dataset.originalIndex);
+                    tasks.splice(index, 1);
+                    saveTasks();
+                    renderTasks(getCurrentFilter());
+                });
+
+                // Evento para editar tarefa (duplo clique)
+                li.addEventListener('dblclick', () => {
+                    editTask(task, originalIndex);
+                });
+
+                taskList.appendChild(li);
+            });
+
+            // Estado vazio quando não há tarefas
+            if (filteredTasks.length === 0) {
+                const emptyState = document.createElement('div');
+                emptyState.className = 'empty-state';
+                emptyState.innerHTML = `
+                    <h3>Nenhuma tarefa encontrada</h3>
+                    <p>${searchTerm ? 'Tente ajustar sua pesquisa ou filtro.' : 'Que tal adicionar sua primeira tarefa?'}</p>
+                `;
+                taskList.appendChild(emptyState);
+            }
+
+            // Atualizar controles de paginação
+            updatePaginationControls(filter);
+
+            // Atualizar estatísticas
+            updateStats();
+        }
+
+        // Função para editar tarefa
+        function editTask(task, index) {
+            const newText = prompt('Editar tarefa:', task.text);
+            if (newText && newText.trim() !== '' && newText.trim() !== task.text) {
+                const trimmedText = newText.trim();
+
+                // Verificar duplicatas
+                const duplicate = tasks.find((t, i) => i !== index && t.text.toLowerCase() === trimmedText.toLowerCase());
+                if (duplicate) {
+                    showNotification('Esta tarefa já existe!', 'warning');
+                    return;
+                }
+
+                task.text = trimmedText;
+                saveTasks();
+                renderTasks(getCurrentFilter());
+                showNotification('Tarefa editada com sucesso!', 'success');
+            }
+        }
+    </script>
+</body>
+</html>
+
